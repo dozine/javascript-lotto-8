@@ -8,16 +8,19 @@ class App {
     Console.print(`\n${count}개를 구매했습니다.`);
     const lottoNumbers = [];
     for (let i = 0; i < count; i++) {
-      const randomNumbers = Random.pickUniqueNumbersInRange(1, 45, 6);
+      // 오름차순 정렬 후 배열에 추가
+      const randomNumbers = Random.pickUniqueNumbersInRange(1, 45, 6).sort(
+        (a, b) => a - b
+      );
       lottoNumbers.push(randomNumbers);
       Console.print(`[${randomNumbers.join(", ")}]`);
     }
 
     const winningNumbers = await Console.readLineAsync(
-      "당첨 번호를 입력해주세요.: "
+      "당첨 번호를 입력해주세요.\n"
     );
     const bonusNumber = await Console.readLineAsync(
-      "보너스 번호를 입력해주세요: "
+      "보너스 번호를 입력해주세요.\n"
     );
     // 당첨 번호 및 보너스 번호 Number 배열로 변환
     const winningNumbersArray = winningNumbers
@@ -71,8 +74,8 @@ class App {
         totalEarning += statistics[key] * winningAmounts[key];
       }
     }
-
-    const rateOfReturn = (totalEarning / purchaseAmount) * 100;
+    // 소수점 첫째자리 까지 표현
+    const rateOfReturn = ((totalEarning / purchaseAmount) * 100).toFixed(1);
 
     Console.print("당첨 통계");
     Console.print("---");
