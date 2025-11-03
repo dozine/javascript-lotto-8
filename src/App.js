@@ -1,88 +1,36 @@
-import { Console, Random } from "@woowacourse/mission-utils";
+import InputView from "./InputView.js";
+import OutputView from "./OutputView.js";
+import LottoMaker from "./LottoMaker.js";
+import WinningResult from "./WinningResult.js";
 class App {
   async run() {
-    const purchaseAmount = await Console.readLineAsync(
-      "구입 금액을 입력해 주세요.\n"
-    );
-    const count = Math.floor(Number(purchaseAmount) / 1000);
-    Console.print(`\n${count}개를 구매했습니다.`);
-    const lottoNumbers = [];
+    const inputView = new InputView();
+    const purchaseAmount = await inputView.purchaseAmountInput();
+    const count = Math.floor(purchaseAmount / 1000);
+
+    OutputView.printPurchaseResult(count);
+
+    const lottos = [];
     for (let i = 0; i < count; i++) {
-      // 오름차순 정렬 후 배열에 추가
-      const randomNumbers = Random.pickUniqueNumbersInRange(1, 45, 6).sort(
-        (a, b) => a - b
-      );
-      lottoNumbers.push(randomNumbers);
-      Console.print(`[${randomNumbers.join(", ")}]`);
+      const lotto = LottoMaker.createLottoNumbers();
+      lottos.push(lotto);
+      OutputView.printLottoNumbers(lotto);
     }
 
-    const winningNumbers = await Console.readLineAsync(
-      "당첨 번호를 입력해주세요.\n"
+    const winningNumbers = await inputView.winningNumbersInput();
+    const bonusNumber = await inputView.bonusNumberInput();
+
+    const result = new WinningResult();
+    for (const lotto of lottos) {
+      result.checkWinning(lotto, winningNumbers, bonusNumber);
+    }
+
+    const totalPrize = result.calculateTotalPrize();
+    OutputView.printStatistics(
+      result.getStatistics(),
+      totalPrize,
+      purchaseAmount
     );
-    const bonusNumber = await Console.readLineAsync(
-      "보너스 번호를 입력해주세요.\n"
-    );
-    // 당첨 번호 및 보너스 번호 Number 배열로 변환
-    const winningNumbersArray = winningNumbers
-      .split(",")
-      .map((num) => Number(num.trim()));
-    const bonusNum = Number(bonusNumber.trim());
-
-    let statistics = {
-      "3개 일치": 0,
-      "4개 일치": 0,
-      "5개 일치": 0,
-      "5개 일치, 보너스 볼 일치": 0,
-      "6개 일치": 0,
-    };
-    const winningAmounts = {
-      "3개 일치": 5000,
-      "4개 일치": 50000,
-      "5개 일치": 1500000,
-      "5개 일치, 보너스 볼 일치": 30000000,
-      "6개 일치": 2000000000,
-    };
-
-    for (const ticket of lottoNumbers) {
-      let cnt = 0;
-      let bonusCnt = 0;
-      for (const number of ticket) {
-        if (winningNumbersArray.includes(number)) {
-          cnt++;
-        }
-        if (number === bonusNum) {
-          bonusCnt++;
-        }
-      }
-      // 순서 변경 6개 일치부터 검사
-      if (cnt === 6) {
-        statistics["6개 일치"] += 1;
-      } else if (cnt === 5 && bonusCnt === 1) {
-        statistics["5개 일치, 보너스 볼 일치"] += 1;
-      } else if (cnt === 5) {
-        statistics["5개 일치"] += 1;
-      } else if (cnt === 4) {
-        statistics["4개 일치"] += 1;
-      } else if (cnt === 3) {
-        statistics["3개 일치"] += 1;
-      }
-    }
-
-    let totalEarning = 0;
-    for (let key in statistics) {
-      if (statistics[key] !== 0) {
-        totalEarning += statistics[key] * winningAmounts[key];
-      }
-    }
-    // 소수점 첫째자리 까지 표현
-    const rateOfReturn = ((totalEarning / purchaseAmount) * 100).toFixed(1);
-
-    Console.print("당첨 통계");
-    Console.print("---");
-    for (let key in statistics) {
-      Console.print(`${key} (${winningAmounts[key]}원) - ${statistics[key]}개`);
-    }
-    Console.print(`총 수익률은 ${rateOfReturn}%입니다.`);
   }
 }
 
